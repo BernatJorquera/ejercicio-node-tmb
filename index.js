@@ -1,4 +1,4 @@
-const fs = require("fs");
+/* eslint-disable indent */
 const chalk = require("chalk");
 const inquirer = require("inquirer");
 const { program } = require("commander");
@@ -13,8 +13,7 @@ program
 program.parse(process.argv);
 let color = program.opts().color;
 const abrev = program.opts().abrev;
-const urlCompleta = `${process.env.TMB_API_URL}?app_id=${process.env.TMB_APP_ID}&app_key=${process.env.TMB_APP_KEY}`;
-console.log(urlCompleta);
+const urlLinias = `${process.env.TMB_API_URL}?app_id=${process.env.TMB_APP_ID}&app_key=${process.env.TMB_APP_KEY}`;
 
 /* preguntando y esperando las respuestas */
 inquirer.prompt([
@@ -48,7 +47,7 @@ inquirer.prompt([
     name: "linea"
   }
 ]).then(respuestas => {
-  fetch(urlCompleta)
+  fetch(urlLinias)
     .then(resp => resp.json())
     .then(datos => lineasMultiples(respuestas, datos));
 });
@@ -97,4 +96,34 @@ const imprimeLinea = (respuestas, datos, linea, lineaExiste) => {
   const [{ posicion, nombreLinea }] = linea;
   color = color || `#${datos.features[posicion].properties.COLOR_LINIA}`;
   console.log(chalk.hex(color)(`${nombreLinea}: ${datos.features[posicion].properties.DESC_LINIA}`));
+  const urlParadas = `${process.env.TMB_API_URL}/${datos.features[posicion].properties.CODI_LINIA}/estacions?app_id=${process.env.TMB_APP_ID}&app_key=${process.env.TMB_APP_KEY}`;
+  fetch(urlParadas)
+    .then(resp => resp.json())
+    .then(paradas => imprimeParadas(respuestas, paradas));
+};
+
+/* una vez tenemos las paradas se imprimen */
+const imprimeParadas = (respuestas, paradas) => {
+  const paradasYOrden = paradas.features
+    .map(feature => ({
+      nombreEstacion: feature.properties.NOM_ESTACIO,
+      orden: feature.properties.ORDRE_ESTACIO,
+      coordenadas: feature.geometry.coordinates,
+      fechaInauguracion: feature.properties.DATA_INAUGURACIO
+    }))
+    .sort((p1, p2) => p1.orden - p2.orden);
+  /* eslint-disable-next-line array-callback-return */
+  paradasYOrden.map(parada => {
+    console.log(chalk.hex(color)(`${!abrev
+      ? `${parada.nombreEstacion.length < 8
+        ? `${parada.nombreEstacion}\t\t\t`
+        : `${parada.nombreEstacion.length < 16
+          ? `${parada.nombreEstacion}\t\t`
+          : `${parada.nombreEstacion}\t`}`}`
+      : `${parada.nombreEstacion.slice(0, 3).toUpperCase()}.`} ${respuestas.informacion.includes("Coordenadas")
+        ? `${parada.coordenadas}\t`
+        : ""}${respuestas.informacion.includes("Fecha de inauguración")
+          ? parada.fechaInauguracion
+          : ""}`));
+  });
 };
