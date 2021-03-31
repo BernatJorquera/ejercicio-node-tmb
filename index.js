@@ -21,5 +21,15 @@ inquirer.prompt([
       }
       return respuestas.transporte === "Metro";
     }
+  },
+  {
+    type: "confirm",
+    message: "¿Quiere que le informemos de los errores?",
+    name: "verbose"
+  },
+  {
+    type: "input",
+    message: "¿Qué línea quiere consultar?",
+    name: "linea"
   }
 ]).then(respuestas => console.log(respuestas));
