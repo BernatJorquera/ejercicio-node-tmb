@@ -123,7 +123,7 @@ const imprimeParadas = (respuestas, paradas) => {
       : `${parada.nombreEstacion.slice(0, 3).toUpperCase()}.`} ${respuestas.informacion.includes("Coordenadas")
         ? `${parada.coordenadas}\t`
         : ""}${respuestas.informacion.includes("Fecha de inauguración")
-          ? parada.fechaInauguracion
+          ? parada.fechaInauguracion.slice(0, -1).split("-").reverse().join("-")
           : ""}`));
   });
 };
